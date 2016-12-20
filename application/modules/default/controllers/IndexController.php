@@ -1890,6 +1890,7 @@ public function getpayrollattendanceAction() {
     }
 
     public function generatepayrollAction() {
+        echo 'tesst';
         $parameters = array();
         $parameters[bunit] = $this->_getParam('bunit', null);
         $parameters[payrollmonth] = $this->_getParam('monthname', null);
