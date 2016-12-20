@@ -1,0 +1,307 @@
+<?php
+/* * ******************************************************************************* 
+ *  This file is part of Sentrifugo.
+ *  Copyright (C) 2014 Sapplica
+ *   
+ *  Sentrifugo is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Sentrifugo is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Sentrifugo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  Sentrifugo Support <support@sentrifugo.com>
+ * ****************************************************************************** */
+?>
+<div id="container">
+    <div id="spinner" class="ajax-loader" style="display:none;" >
+    <img id="img-spinner" src="<?php echo MEDIA_PATH;?>images/loader2.gif" alt="Loading" />				
+</div>
+<?php 
+if (count($this->messages)) {
+    ?>
+    <div id="dispmsgsddept">
+        <?php
+        foreach ($this->messages as $message) {
+            $flag = array();
+            $flag = array_keys($message);
+            echo "<div id='messageData' class='ml-alert-1-$flag[0]'><div style='display:block;'><span class='style-1-icon $flag[0]'></span>";
+            echo $message[$flag[0]];
+            echo "</div></div>";
+        }
+        ?>
+    </div>	
+
+<?php }
+?>
+<span id="error_message"></span>
+<?php
+if ($this->call == 'ajaxcall') {
+    $div = '';
+    $endDiv = '';
+} else {
+    // print_r($this->dataArray['table_data']); exit;
+    $div = '<div id="grid_' . $this->dataArray[0]['objectname'] . '" class="all-grid-control">';
+    $endDiv = '</div>';
+    $table = '<div class="table-header"> <span>Generate Payroll</span>';
+    $table .= '</div>';
+    $table .= '<div class="slimScrollDiv" style="position: relative; overflow: auto; width: 250px; height: auto;">';
+    $table .= '<div id="' . $this->dataArray[0]['objectname'] . '" class="details_data_display_block newtablegrid" style="overflow: auto; width: 250px; height: auto; background: rgb(204, 204, 204) none repeat scroll 0% 0%; padding-bottom: 10px;">';
+    $table .= '<table class="grid" cellspacing="0" cellpadding="4" border="0" align="center" width="100%">';
+    $table .= '<thead><tr><th>Employee Code</th><th>Name</th><th>Present Days</th></tr></thead><tbody>';
+    if (count($this->dataArray[0]['tablecontent'])) {
+
+        foreach ($this->dataArray[0]['tablecontent'] as $row) {
+            $table .= '<tr class="row1" onclick="selectrow(' . $this->dataArray[0]['objectname'] . ',this);"><td>' . $row['EmpCode'] . '</td><td>' . $row['userfullname'] .
+                    '</td><td><input name="presentdays" id="' . $row['EmployeeId'] . '" value="" maxlength="20" type="number"></td></tr>';
+        }
+    }
+
+    $table .= '</tbody></table>';
+    $table .= '</div>';
+    $table .= '</div>';
+}
+//echo $div.$table .$endDiv;
+
+$businessunit_list = $this->dataArray['businessunitslist'];
+$departmentlist = $this->dataArray['departmentlist'];
+$year_list = $this->dataArray['payrollyearslist'];
+
+if ($this->call != 'ajaxcall') {
+    if (sapp_Global::_isactivemodule(RESOURCEREQUISITION)) {
+        ?>
+        <!--<form  action="http://localhost/VHRIS/index.php/generatepayroll/add" method="POST">-->
+
+        <div class="total-form-controller">
+            <div class="new-form-ui inputheight-3"> 
+                Select Business Unit: <div class="division"><select id='blist' name="businessunit" class="select2-offscreen" tabindex="-1">
+                        <option value="-1">No Business Units</option>
+        <?php foreach ($businessunit_list as $list) { ?>
+                            <option value="<?php echo $list['id'] ?>"><?php echo $list['unitname'] ?></option>
+                        <?php } ?>			                       
+                    </select>
+                </div>
+            </div>
+            <div class="new-form-ui inputheight-3"> 
+                Select Group:<div class="division"><select id='paygroup' name="deptname" class="select2-offscreen" tabindex="-1">
+        <?php foreach ($departmentlist as $list_dep) { ?>
+                            <option value="<?php echo $list_dep['id'] ?>"><?php echo $list_dep['deptname'] ?></option>
+                        <?php } ?>			                       
+                    </select>
+                </div>
+            </div>
+            <div class="new-form-ui inputheight-3"> 
+                Select Year: <div class="division"><select id='year' name="year" class="select2-offscreen" tabindex="-1">
+                        <option value="0" >Select Year</option>
+                    <?php foreach ($year_list as $ylist) { ?>
+                            <option value="<?php echo $ylist['year'] ?>"><?php echo $ylist['year'] ?></option>
+                        <?php } ?>			                       
+                    </select>
+                </div>
+            </div>
+            <div class="new-form-ui inputheight-3"> 
+                Select Payroll Period: <div class="division">
+                    <select id='payrolls' name="payrollmonth" class="select2-offscreen" tabindex="-1" >
+
+                    </select>
+                </div>
+            </div>
+            <div class="new-form-ui inputheight-1">
+                <div class="back-to-page">
+                <input type="button" value="Get" id="getpayrolldetails" />
+                </div>
+                
+        </div>
+            
+        <?php
+    }
+}
+
+?>
+
+<?php
+
+echo "<div id='table'>" . $this->dataArray['table_data'] . "</div>";
+?>
+ 
+            
+<?php if (in_array('prefix', $this->popConfigPermission)) { ?>	
+    <span class="add-coloum" onclick="displaydeptform('<?php echo BASE_URL . 'prefix/addpopup' ?>', 'Prefix');"> Add Prefix </span>			
+<?php } ?>
+    <div id="payrolltable"></div>
+   <div class="new-form-ui-submit">
+ <div >
+                <input type="button" value="Generate Payroll" id="generatepayroll_btn" />
+                </div>
+ </div>
+<script type='text/javascript'>
+
+  
+    $(document).ready(function () {
+        var getarray =[];
+        $("#payroll_table").hide();
+        $("#generatepayroll_btn").hide();
+        $('#blist').on('change', function () {
+            var selectedbunit = this.value;
+            var bunit_list = {bunit: selectedbunit};
+                $.ajax({
+                type: 'POST',
+                url: base_url+'/index/getbunitdetails',
+                data: {method : 0 ,bunit: selectedbunit},
+                dataType: "json",
+                success: function (data) {
+                    var dataArray = data;
+                  
+                    var deparmentData = dataArray['departmentlist'];
+                    if (deparmentData)
+                    {
+                        $("#paygroup option").remove();
+                        $("#paygroup").append("<option value='0'>No Depertment </option>")
+                        $.each(deparmentData, function (index, value) {
+                            $("#paygroup").append("<option value='" + value['id'] + "'> " + value['deptname'] + "</option>");
+
+                        });
+                    }
+
+                }
+            });
+            $("#getpayrolldetails").on('click', function (){
+             $.blockUI({ width:'50px',message: $("#spinner").html() });
+              var selecteddepartment = $('#paygroup option:selected').val();
+              var selectedpayrollperiod = $( "#payrolls" ).val();
+              $.ajax({
+                type: 'POST',
+                url: base_url+'/index/getpayrolldetails',
+                data: {method : 0 ,bunit: selectedbunit,dept:selecteddepartment,payperiod:selectedpayrollperiod},
+              ///  dataType: 'json',
+                success: function (data) {
+                    $("#payrolltable").html('');
+                     $("#payrolltable").append(data);
+
+                     $("#generatepayroll_btn").show(); 
+                     $.unblockUI();
+                   }
+                });
+              
+            });
+             $('#year').on('change', function () {
+             var selectedyear = this.value;
+            var year_list = {year: selectedyear};
+                $.ajax({
+                type: 'POST',
+                url: base_url+'/index/getpayrollyeardetails',
+                data: {bunit : selectedbunit ,year: selectedyear},
+                dataType: "json",
+                success: function (data) {
+                     var dataArray = data;
+                    var payrollData = dataArray['payrollperiods'];
+                    if (payrollData)
+                    {
+                        $("#payrolls option").remove();
+                        $("#payrolls").append("<option value='0'>No Payroll Period </option>");
+                        $.each(payrollData, function (index, value) {
+                            $("#payrolls").append("<option value='" + value['id'] + "'> " + value['name'] + "</option>");
+                        });
+
+                    }
+               
+              }
+               });
+            });
+
+        });
+
+<?php if (count($this->messages)) { ?>
+            setTimeout(function () {
+                $('#dispmsgsddept').fadeOut('slow');
+            }, 3000);
+<?php } ?>
+        
+        $("#generatepayroll_btn").on('click', function () {
+            $.blockUI({ width:'50px',message: $("#spinner").html() });
+            var businessunit = $("#blist").val();
+            var department = $("#paygroup").val();
+            var payrollperiod = $("#payrolls").val();
+            var monthname = GetMonth($("#payrolls").val());
+            var dataArr = [];
+            var data = '<Data>';
+            var table = $("#payroll_table ");
+            $($("#payroll_table tr")).each(function (key, val) {
+                if (val.id != 'undefined' && val.id != '' && $("input[name=presentdays]").val() != '')
+                {
+                    data += "<row empid=" + val.id + " noofdays=" + $("input[name=presentdays]").val() + "/>";
+                }
+            });
+            data += "</Data>";
+            $.ajax({
+                type: 'POST',
+                url: base_url+'/index/generatepayroll',              
+                data: {monthname:monthname, payperiod :payrollperiod, dept:department,bunit:businessunit,data:data},
+                dataType: "json",
+                success: function (data) {
+                   // alert(data);
+                }
+            });
+            data += '</Data>';
+           
+        });
+
+
+
+
+    });
+    function GetMonth(id) {
+        var text;
+        var value = id;
+        switch (value) {
+            case '1':
+                text = 'Jan';
+                break;
+            case '2':
+                text = 'Feb';
+                break;
+            case '3':
+                text = 'Mar';
+                break;
+            case '4':
+                text = 'Apr';
+                break;
+            case '5':
+                text = 'May';
+                break;
+            case '6':
+                text = 'Jun';
+                break;
+            case '7':
+                text = 'Jul';
+                break;
+            case '8':
+                text = 'Aug';
+                break;
+            case '9':
+                text = 'Sep';
+                break;
+            case '10':
+                text = 'Oct';
+                break;
+            case '11':
+                text = 'Nov';
+                break;
+            case '12':
+                text = 'Dec';
+                break;
+            default:
+                text = "";
+
+        }
+
+        return text;
+    }
+</script>
+   

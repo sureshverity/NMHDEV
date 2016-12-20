@@ -1,0 +1,31 @@
+﻿CHANGELOG Sentrifugo
+====================
+RELEASE 2.1.1
+-------------
+
+Changes in Controllers
+------------------------
+
+./application/modules/timemanagement/controllers/IndexController.php
+./application/modules/timemanagement/controllers/ProjectsController.php
+
+
+      
+- IndexController.php
+  Display holidays, weekends , enter time sheet , edit time sheet , erase time sheet , submit time sheet , apply leaves.
+
+  
+- ProjectsController.php
+  Manager can create , edit , view, delete projects.
+
+  
+Note: You can find the respective view files in below scripts: 
+./application/modules/timemanagement/views/scripts
+
+
+Changes in scripts
+------------------------
+./public/media/js/timemanagement.js
+
+
+

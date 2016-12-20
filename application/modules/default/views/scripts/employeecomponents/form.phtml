@@ -1,0 +1,190 @@
+<?php 
+/********************************************************************************* 
+ *  This file is part of Sentrifugo.
+ *  Copyright (C) 2014 Sapplica
+ *   
+ *  Sentrifugo is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Sentrifugo is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Sentrifugo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  Sentrifugo Support <support@sentrifugo.com>
+ ********************************************************************************/
+if($this->ermsg !='')
+		{
+?>
+     <div class="ml-alert-1-info m1-info-set"><div class="style-1-icon info"></div>No data found.</div>
+<?php }else
+	{
+		 if($this->popup == 'close') { ?> 	
+			<div class="ml-alert-1-success">
+			<div class="style-1-icon success"></div>
+			Category <?php echo $this->eventact; ?> successfully
+			</div>
+		
+		<?php 	 }else{ 	
+		 sapp_Global::generateClientValidations($this->form);
+		 $request = Zend_Controller_Front::getInstance();
+		 $actionName = $request->getRequest()->getActionName();
+		 	if($actionName == 'view')
+		 	  $viewclass = 'view-form-detail';
+		 	else
+		 	  $viewclass = '';  
+		 ?>
+			<div id="error_message" style="display:none;"></div>
+			<form name="<?php echo $this->form->getName(); ?>" id="<?php echo $this->form->getId(); ?>" action="<?php echo $this->form->getAction();?>" method="<?php echo $this->form->getMethod(); ?>">
+					<input type="hidden" id="empid" value="<?php echo $this->id;?>">
+					<?php $this->form->getAction();?>
+			        <div class="total-form-controller <?php echo $viewclass;?>">
+			               <?php  if($this->flag!='view'){?>
+						<?php echo sapp_Helper::sd_form_helper($this->msgarray, $this->form, 'firstname', '','','required',array());?>
+						<?php echo sapp_Helper::sd_form_helper($this->msgarray, $this->form, 'lastname', '','','',array());?>
+						<?php echo sapp_Helper::sd_form_helper($this->msgarray, $this->form, 'contactnumber', '','','',array());?>
+						<?php echo sapp_Helper::sd_form_helper($this->msgarray, $this->form, 'emailaddress', '','','',array());?>
+						<?php //echo sapp_Helper::sd_form_helper($this->msgarray, $this->form, 'Componentid', '','','',array());?>
+                                                
+							<?php }else{
+								sapp_Helper::viewHeader();
+                                sapp_Helper::viewBody('alt','First Name',(!empty($this->data['firstname']))?$this->data['firstname']:"...",'Email',(!empty($this->data['emailaddress']))?$this->data['emailaddress']:"...");
+                                sapp_Helper::viewFooter();
+								}
+							 ?>	
+					<div class="new-form-ui-submit">
+					<?php echo $this->form->submit; ?>
+					<?php if($actionName == 'addpopup') { ?>
+					    <button onclick="closeiframepopup('<?php echo $this->controllername;?>','cancel');"  type="button" >Cancel</button>
+					<?php }else{?>
+						<?php if($actionName == 'view'){?>
+							<input type="button" onclick="changeeditscreen('<?php echo $this->controllername;?>',<?php echo $this->id;?>);" value="Edit" />
+						<?php }?>
+						<button onclick="window.location.href='<?php echo BASE_URL; ?>employeecomponents';" type="button" id="Cancel" name="Cancel">Cancel</button>
+					<?php }?>	
+					</div>
+                                  <?php if($actionName != 'view'){?>
+                                    <div id="gridView"></div>
+                                  <?php } ?>
+				</div>
+				
+			</form>
+                         <?php if($actionName != 'view'){?>
+                        <div class="new-form-ui-submit" id="saveempcomp"><input type="button" value="Update" id="savecomponents"></div>
+                         <?php } ?>
+                            <?php }?>
+<!--<script language='javascript' type='text/javascript'>
+
+	<?php if($this->popup != '') { ?>
+	  closeiframeAddPopup("<?php echo $this->departmentData ;?>",'<?php echo $this->controllername; ?>','service_desk_id','category'); 					
+	<?php } ?>
+</script>-->
+
+<?php }?>
+
+ <script type='text/javascript'>
+         $(document).ready(function(){
+             $("#submitbutton").hide();
+             $("#Cancel").hide();
+             var url = document.location.pathname;
+             var empid = url.substring(url.lastIndexOf('/') + 1);
+            
+	   
+             $.post(base_url+"/index/getpayrollcomponents",{emp_id:empid},function(data){
+                        var div1 = "<div id='employeecomponenttable'><div id='grid_employeecomponent' class='all-grid-control'>";
+                        div1 += "<div class='table-header'> <span>Components</span></div>";
+                        div1 += "<div class='slimScrollDiv' style='position: relative; overflow: hidden; width: 750px; height: auto;'>";
+                        div1 += "<div id='employeecomponent' class='details_data_display_block newtablegrid' style='overflow: hidden; width: 250px; height: auto; background: rgb(204, 204, 204) none repeat scroll 0% 0%; padding-bottom: 10px;'>";
+                                
+                      var table = "<table class='grid' border='2'><thead>";
+                       table +="<tr><th>Selected</th><th>Name</th><th>Operator</th><th>Is On Days</th><th>Amount</th></tr></thead><tbody>";
+                       var obj = JSON.parse(data);
+                       var html ='';
+                       for(var i = 0; i < obj.length; i++) {
+                            var item = obj[i];
+                            html += "<tr class='row1'><td><input type='checkbox' name='component' value='"+item.id+"'";
+                            if(item.checked.toString() == "true")
+                            {
+                            html += "checked='true' class='chkd'";
+                            }   
+                            var isonDays = false;
+                            if(item.IsOnDays.toString() == "1" || item.IsOnDays.toString() == "true")
+                            {
+                                isonDays = true;
+                            }
+                            html += "/></td><td>"+item.name+"</td><td>"+FillOperator(item.Operator, item.id)+"</td><td>";
+                            
+    html += "<input type='checkbox' id='chkIsOnDay' value='"+item.id+"'";
+    if(isonDays == true)
+                            {
+                            html += "checked='true'";
+                            } 
+                            html += "/></td><td><input type='textbox' value='"+item.FixedAmount+"' id=txtFA_"+item.id+" class='fixedAmount' /></td></tr>";       
+                            
+                        }
+                         table += html;
+                         table +="</tbody></table>";
+                         div1 += table;
+                         div1 +="</div></div></div></div>";
+                        $("#gridView").append(div1);
+              
+	    });
+            $("#savecomponents").click(function(){
+            
+        var data = [];
+       $('input:checkbox[name=component]').each(function(){       
+          var id,operator;
+           var arr = [];
+             if($(this).is(':checked'))
+             {             
+             var id =$(this).val();
+             var $parenttr = $(this).closest("tr");
+           var isonday = 0;
+           if($parenttr.find("#chkIsOnDay").is(':checked'))
+           {
+               isonday = 1;
+           }
+           
+           var operator= $("#drpope_"+id).val();
+           var amount= $("#txtFA_"+id).val();
+            arr.push(id);
+            arr.push(operator);
+            arr.push(isonday);
+            arr.push(amount);          
+             }
+            
+              data.push(arr); 
+            
+         });
+         
+          $.post(base_url+"/index/savepayrollcomponents",{data:data,empid:empid},function(data){
+             
+              alert("Employee Component Updated Successfully");
+              location.reload();
+        });
+         
+     
+    });
+	});
+        
+       function FillOperator(selectedValue , id)
+       {
+           if(selectedValue == null || selectedValue == "null")
+           {
+               selectedValue ="0";
+           }
+           var strhtml = "<select class='operator' id ='drpope_"+id+"'><option value='-1'>--Select--</option><option value='+'>+</option><option value='-'>-</option></select>";
+           var $obj = $(strhtml);
+           $obj.find('option[value="'+selectedValue+'"]').attr("selected", "selected");
+//var $obj = $(strhtml).val(selectedValue).attr("selected", "selected");
+//alert($obj.prop('outerHTML'));
+    return $obj.prop('outerHTML');
+    
+       }
+     </script>
+                        

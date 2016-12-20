@@ -1,0 +1,217 @@
+<?php
+/* * ******************************************************************************* 
+ *  This file is part of Sentrifugo.
+ *  Copyright (C) 2014 Sapplica
+ *   
+ *  Sentrifugo is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Sentrifugo is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Sentrifugo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  Sentrifugo Support <support@sentrifugo.com>
+ * ****************************************************************************** */
+if ($this->ermsg != '') {
+    ?>
+    <div class="ml-alert-1-info m1-info-set"><div class="style-1-icon info"></div>No data found.</div>
+<?php
+} else {
+    if ($this->popup == 'close') {
+        ?> 	
+        <div class="ml-alert-1-success">
+            <div class="style-1-icon success"></div>
+            Category <?php echo $this->eventact; ?> successfully
+        </div>
+
+    <?php
+    } else {
+        sapp_Global::generateClientValidations($this->form);
+        $request = Zend_Controller_Front::getInstance();
+        $actionName = $request->getRequest()->getActionName();
+        if ($actionName == 'view')
+            $viewclass = 'view-form-detail';
+        else
+            $viewclass = '';
+        ?>
+        <div id='calendar'></div>
+        <div id="error_message" style="display:none;"></div>
+        <form name="<?php echo $this->form->getName(); ?>" id="<?php echo $this->form->getId(); ?>" action="<?php echo $this->form->getAction(); ?>" method="<?php echo $this->form->getMethod(); ?>">
+            <input type="hidden" id="empid" value="<?php echo $this->id; ?>">
+                <?php $this->form->getAction(); ?>
+            <div class="total-form-controller <?php echo $viewclass; ?>">
+        <?php if ($this->flag != 'view') { ?>
+                    <div id='calendar'></div>
+
+                <?php
+                } else {
+                    sapp_Helper::viewHeader();
+                    sapp_Helper::viewBody('alt', 'First Name', (!empty($this->data['firstname'])) ? $this->data['firstname'] : "...", 'Email', (!empty($this->data['emailaddress'])) ? $this->data['emailaddress'] : "...");
+                    sapp_Helper::viewFooter();
+                }
+                ?>	
+                <div class="new-form-ui-submit">
+                    <?php echo $this->form->submit; ?>
+                    <?php if ($actionName == 'addpopup') { ?>
+                        <button onclick="closeiframepopup('<?php echo $this->controllername; ?>', 'cancel');"  type="button" >Cancel</button>
+                    <?php } else { ?>
+                        <?php if ($actionName == 'view') { ?>
+                            <input type="button" onclick="changeeditscreen('<?php echo $this->controllername; ?>',<?php echo $this->id; ?>);" value="Edit" />
+                        <?php } ?>
+                        <button onclick="window.location.href = '<?php echo BASE_URL; ?>employeecomponents';" type="button" id="Cancel" name="Cancel">Cancel</button>
+                <?php } ?>	
+                </div>
+                <?php if ($actionName != 'view') { ?>
+                    <div id="gridView"></div>
+        <?php } ?>
+            </div>
+
+        </form>
+       
+<?php } }?>
+  
+<script src='<?php echo MEDIA_PATH;?>fullcalendar/moment.min.js' type='text/javascript' ></script>
+<script src='<?php echo MEDIA_PATH;?>fullcalendar/fullcalendar.min.js' type='text/javascript' ></script>
+<link href='<?php echo MEDIA_PATH;?>fullcalendar/fullcalendar.print.min.css' rel="stylesheet" media='print' />
+<link href='<?php echo MEDIA_PATH;?>fullcalendar/fullcalendar.min.css' rel='stylesheet' />
+
+<script type='text/javascript'>
+                                                    $(document).ready(function () {
+                                                        $("#submitbutton").hide();
+                                                        $("#Cancel").hide();
+                                                        var datajson;
+                                                        var url = document.location.pathname;
+                                                        var empid = url.substring(url.lastIndexOf('/') + 1);
+
+                                                        $('#calendar').fullCalendar({
+                                                            header: {
+                                                                left: 'prev,next today',
+                                                                center: 'title',
+                                                                right: 'month'
+                                                            },
+                                                            navLinks: false,
+                                                            fixedWeekCount: false,
+                                                            height: 500,
+                                                            weekends:true,
+                                                           
+                                                            viewRender: function (view, element) {
+                                                                var b = $('#calendar').fullCalendar('getDate');
+                                                                b = formatDate(b);
+                                                                $.post(base_url + "/index/getpayrollattendance", {emp_id: empid, startdate: b}, function (data) {
+                                                                    datajson = data;
+                                                                   // alert(datajson);
+                                                                    $('#calendar').fullCalendar('removeEvents', function (event) {
+                                                                        return true;
+                                                                    });
+                                                                    $('#calendar').fullCalendar('addEventSource', JSON.parse(datajson));
+                                                                });
+                                                            },
+                                                            eventRender: function(event, element) {
+                                                                element.find(".fc-event-title").remove();
+                                                                element.find(".fc-content").remove();
+                                                                element.find(".fc-event-time").remove();
+                                                                var $title = event.title;
+                                                                var new_description = ""; 
+                                                                if($title.indexOf("##") >= 0)
+                                                                {
+                                                                   var titleArray = $title.split("##");
+                                                                   new_description = titleArray[0];
+                                                                   new_description += "<br/><span>"+titleArray[1] +"-"+ titleArray[2]+"</span>";
+                 
+                                                                }
+                                                                else
+                                                                {
+                                                                    new_description = $title;
+                                                                }
+                                                                 
+                                                                ;
+                                                                element.append(new_description);
+                                                            }
+                                                        });
+
+
+                                                    });
+                                                    function formatDate(date) {
+                                                        var d = new Date(date),
+                                                                month = '' + (d.getMonth() + 1),
+                                                                day = '' + d.getDate(),
+                                                                year = d.getFullYear();
+
+                                                        if (month.length < 2)
+                                                            month = '0' + month;
+                                                        if (day.length < 2)
+                                                            day = '0' + day;
+
+                                                        return [year, month, day].join('-');
+                                                    }
+</script>   
+<style type="text/css" >
+    .fc-scroller{
+        overflow-y : hidden !important;
+    }
+    .fc-day-number {
+        font-size: 18pt;
+        font-style: italic;
+        font-family: Verdana, Arial, Sans-Serif;
+    }
+    .present{
+        background: green none repeat scroll 0 0;
+        font-family: Verdana,Arial,sans-serif;
+        font-size: 18pt;
+        font-style: italic;
+        text-align: center;
+        width: 100px;
+        margin-top: 15px !important;
+    }
+    .present>span{
+        font-size: 10pt !important;
+    }
+    .absent{
+        background: red none repeat scroll 0 0;
+        font-family: Verdana,Arial,sans-serif;
+        font-size: 18pt;
+        font-style: italic;
+        text-align: center;
+        margin-top: 24px !important;
+        width: 50px;
+    }
+
+    .leave{
+        background: #DD9933 none repeat scroll 0 0;
+        font-family: Verdana,Arial,sans-serif;
+        font-size: 18pt;
+        font-style: italic;
+        text-align: center;
+        margin-top: 24px !important;
+        width: 50px;
+    }
+
+    .holiday{
+        background: gray none repeat scroll 0 0;
+        font-family: Verdana,Arial,sans-serif;
+        font-size: 18pt;
+        font-style: italic;
+        text-align: center;
+        margin-top: 24px !important;
+        width: 50px ;
+    }
+    .weekend{
+         background: black none repeat scroll 0 0;
+        font-family: Verdana,Arial,sans-serif;
+        font-size: 18pt;
+        font-style: italic;
+        text-align: center;
+        margin-top: 24px !important;
+        width: 50px ;
+    }
+    .noevent{
+        display: none;
+    }
+    
+</style>   
